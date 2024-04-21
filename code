@@ -1,4 +1,90 @@
 ```{r DEATH}
+averageAQICalculator <- function(startYear, endYear) {
+  
+  # biglist: 1 = county code
+  #          2 = average AQI
+  
+  county <- c()
+  aqi <- c()
+  years <- c()
+  
+  for (i in startYear:endYear) {
+    
+    name = paste("annual_aqi_by_county_", i, ".csv", sep = "")
+    aqi_data <- read.csv(file = name)
+    
+    for (j in 1:nrow(aqi_data)) {
+      
+      if (determineCounty(aqi_data[j, 1], aqi_data[j, 2])) {
+      countyCode = fips(aqi_data[j, 1], aqi_data[j, 2])
+      if (length(which(county == countyCode)) > 0) {
+        aqi[[which(county == countyCode)[[1]]]] <- aqi[[which(county == countyCode)[[1]]]] + aqi_data[j, 13]
+        years[[which(county == countyCode)[[1]]]] <- years[[which(county == countyCode)[[1]]]]+ 1
+      } else {
+        if (i == startYear) {
+          county <- append(county, countyCode)
+          aqi <- append(aqi, aqi_data[j, 13])
+          years <- append(years, 1)
+        } 
+      }
+      
+      }
+    }
+    
+  }
+  
+  delete <- which(years < endYear - startYear + 1)
+  aqi <- aqi[-c(delete)]
+  county <- county[-c(delete)]
+  
+  aqi <- aqi / (endYear - startYear + 1)
+  biglist <- list(county, aqi)
+  print(biglist)
+  
+  return(biglist)
+  
+}
+
+aqiCancer <- function(pollution, states) {
+  
+  county <- pollution[[1]]
+  pollutionData <- pollution[[2]]
+  cancerRate <- rep(c(0), each = length(county))
+  cancer <- read.csv('nonhodgkinlymphoma.csv')
+  
+  for (i in 2:nrow(cancer)) {
+    
+    # looks through the dataset until it gets to the counties without data
+    if (determineNumber(cancer[i, 3])) { 
+    
+    # adds cancer data to listy
+    if (length(which(county == as.numeric(cancer[i, 2]))) > 0) { 
+      
+      # removes counties with big/small populations
+      #if (as.numeric(cancer[i, 3]) * 100000 / as.numeric(cancer[i, 9]) <= 50000) {
+      
+      cancerRate[[which(county == as.numeric(cancer[i, 2]))[[1]]]] <- as.numeric(cancer[i, 3])
+      
+      #}
+      
+    }
+      
+    } else {
+      break
+    }
+    
+  }
+  
+  # removes stuff from listy that is not good enough
+  delete <- which(cancerRate == 0)
+  county <- county[-c(delete)]
+  pollutionData <- pollutionData[-c(delete)]
+  cancerRate <- cancerRate[-c(delete)]
+  listy <- list(county, pollutionData, cancerRate)
+  
+  return(listy)
+  
+}
 
 averagePollutantOneYear <- function(csv_data) {
   # biglist: index 1 = county code
@@ -8,21 +94,123 @@ sublist <- list(csv_data[2, 1], 0, 0)
 biglist <- list(sublist)
 # the date for the first county is off
 currentIndex <- 1
-for (i in 2:nrow(csv_data)) {
-  county = csv_data[i, 1] * 1000 + csv_data[i, 2]
+for (i in 1:nrow(csv_data)) {
+  print(csv_data[i, 1])
+  if(determineNumber(csv_data[i, 1])) {
+  county =  as.numeric(csv_data[i, 1]) * 1000 + as.numeric(csv_data[i, 2])
   if (county == biglist[[currentIndex]][1]) {
-    biglist[[currentIndex]][[2]] <- biglist[[currentIndex]][[2]] + csv_data[i, 20]
+    biglist[[currentIndex]][[2]] <- biglist[[currentIndex]][[2]] + csv_data[i, 17]
     biglist[[currentIndex]][[3]] <- biglist[[currentIndex]][[3]] + 1
   } else {
-    hi <- list(county, csv_data[i, 20], 1)
+    hi <- list(county, csv_data[i, 17], 1)
     biglist <- append(biglist, list(hi))
     currentIndex <- currentIndex + 1
+  }
+  } else {
+    break
   }
 }
 for (i in 1:length(biglist)) {
   biglist[[i]][[2]] <- biglist[[i]][[2]] / biglist[[i]][[3]]
 }
 return(biglist)
+}
+
+amountHighPollutant <- function(csv_data) {
+  
+  # biglist: index 1 = county code
+  #          index 2 = average concentration per day
+  #          index 3 = number of days
+sublist <- list(as.numeric(csv_data[1, 1]), 0, 0)
+biglist <- list(sublist)
+currentIndex <- 1
+for (i in 1:nrow(csv_data)) {
+  print(csv_data[i, 1])
+  if(determineNumber(csv_data[i, 1])) {
+  county =  as.numeric(csv_data[i, 1]) * 1000 + as.numeric(csv_data[i, 2])
+  if (county == biglist[[currentIndex]][1]) {
+    if (csv_data[i, 17]>35.5) {
+    biglist[[currentIndex]][[2]] <- biglist[[currentIndex]][[2]] + csv_data[i, 17]
+    }
+    biglist[[currentIndex]][[3]] <- biglist[[currentIndex]][[3]] + 1
+  } else {
+    hi <- list(county, 0, 1)
+    if (csv_data[i, 17] > 35.5) {
+      hi[[2]] <- 1
+    }
+    biglist <- append(biglist, list(hi))
+    currentIndex <- currentIndex + 1
+  }
+  } else {
+    break
+  }
+}
+
+days <- 365
+    if (biggerlist[[i]][[1]] %% 4 == 0) {
+      days <- 366
+    }
+
+for (i in 1:length(biglist)) {
+  biglist[[i]][[2]] <- biglist[[i]][[2]] * (days / biglist[[i]][[3]])
+  biglist[[i]][[3]] <- days
+}
+  
+}
+
+totalDaysMultipleYears <- function(biggerlist) {
+  # biggerlist: index 1: year
+  #             index 2: biglist (biggerlist[[i]][[2]] is biglist)
+  
+  # collectivelist: index 1: countycode
+  #                 index 2: average
+  #                 index 3: number of days calculated
+  
+  # stupidvector: list of the index of counties
+  
+  collectivelist <- list()
+  stupidvector <- c()
+  
+  # set up stupidvector and collectivelist to have all the counties from the first biglist
+  for (i in 1:length(biggerlist[[1]][[2]])) {
+    
+    sublist <- list(biggerlist[[1]][[2]][[i]][[1]], 0, 0)
+    collectivelist <- append(collectivelist, list(sublist))
+    stupidvector <- append(stupidvector, biggerlist[[1]][[2]][[i]][[1]])
+    
+  }
+  
+  # loop through each biglist
+  for (i in 1:length(biggerlist)) {
+    
+    # loop through each county in biglist
+    for (j in 1:length(biggerlist[[i]][[2]])) {
+      
+      if (length(which(stupidvector == biggerlist[[i]][[2]][[j]][[1]])) > 0) {
+        
+        index = which(stupidvector == biggerlist[[i]][[2]][[j]][[1]])[1]
+        collectivelist[[index]][[2]] <- collectivelist[[index]][[2]] + biggerlist[[i]][[2]][[j]][[2]]
+        collectivelist[[index]][[3]] <- collectivelist[[index]][[3]] + biggerlist[[i]][[2]][[j]][[3]]
+        
+      }
+      
+    }
+    
+  }
+    
+  # code that kills whichever counties did not have data in all the years
+    for (i in length(collectivelist):1) {
+      
+      if (collectivelist[[i]][[3]] >= 365 * length(biggerlist)) {
+        
+      } else {
+        collectivelist[[i]] <- NULL
+      }
+      
+    }
+  
+  return(collectivelist)
+  
 }
 
 averagePollutantMultipleYears <- function(biggerlist) {
@@ -106,6 +294,22 @@ determineNumber <- function(x) {
   
 }
 
+determineCounty <- function(a, b) {
+  
+  tryCatch(
+    
+    {
+      fips(a, b)
+      return(TRUE)
+    },
+    error = function(e) {
+      return(FALSE)
+    }
+    
+  )
+  
+}
+
 depression <- function(pollution) {
   
   library(xlsx)
@@ -144,12 +348,12 @@ cancer <- function(pollution, states) {
   listy <- list()
   vecy <- c()
   for (i in 1:length(pollution)) {
-    listy <- append(listy, list(list(pollution[[i]][[1]], pollution[[i]][[2]],-1)))
+    listy <- append(listy, list(list(pollution[[i]][[1]], pollution[[i]][[2]],-1, 0)))
     vecy <- append(vecy, pollution[[i]][[1]])
   }
   
-  cancer <- read.csv('oral and pharynx.csv')
-  for (i in 3:nrow(cancer)) {
+  cancer <- read.csv('nonhodgkinlymphoma.csv')
+  for (i in 2:nrow(cancer)) {
     
     # looks through the dataset until it gets to the counties without data
     if (determineNumber(cancer[i, 3])) { 
@@ -177,15 +381,16 @@ cancer <- function(pollution, states) {
     
     if (listy[[i]][[3]] == -1) {
       listy[[i]] <- NULL # removes the ones that did not have data in all the years
-    } else if (length(which(states==(listy[[i]][[1]] %/% 1000))) == 0) {
-      listy[[i]] <- NULL # removes everything not in the desired state
-    } 
+    } #else if (length(which(states==(listy[[i]][[1]] %/% 1000))) == 0) {
+      #listy[[i]] <- NULL # removes everything not in the desired state
+    #} 
     
   }
   
   # listy: 1 = fips
   #        2 = pollution average
   #        3 = cancer incidence
+  #        4 = carcinogen
   
   return(listy)
   
@@ -220,6 +425,8 @@ smoking <- function(listy) {
 
 coordinates <- function(listy) {
   
+  print(listy)
+  
   # makes a graph and prints the correlation thing
   x <- c()
   y <- c()
@@ -237,6 +444,22 @@ coordinates <- function(listy) {
   
 }
 
+betterCoordinates <- function(listy) {
+  
+  # makes a graph and prints the correlation thing
+  x <- listy[[2]]
+  y <- listy[[3]]
+  
+  plot(x, y)
+  abline(lm(y ~ x))
+  print(cor(x, y))
+  
+}
+
+b <- averageAQICalculator(2011, 2016)
+c <- aqiCancer(b, 2)
+betterCoordinates(c)
+
 # asking user for what pollutant and what year to gather all the databases and put them into biggerlist
 pollutant = readline(prompt = "Which pollutant: ")
 pollutantNum = 0
@@ -250,6 +473,8 @@ if (pollutant == "ozone") {
   pollutantNum = 42101
 } else if (pollutant == "pm10") {
   pollutantNum = 81102
+} else if (pollutant == "pm2.5") {
+  pollutantNum = 88101
 }
 startYear = readline(prompt = "Start year: ")
 startYear = as.integer(startYear)
@@ -266,6 +491,6 @@ for (i in startYear:endYear) {
 states <- c(42)
 q <- averagePollutantMultipleYears(data3)
 m <- cancer(q, states)
-e <- smoking(m)
-coordinates(e)
+# e <- smoking(m)
+coordinates(m)
 ```
