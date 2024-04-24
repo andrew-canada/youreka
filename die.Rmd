@@ -334,27 +334,6 @@ uvThing <- function() {
   return(list)
   
 }
-  
-coordinates <- function(listy) {
-  
-  print(listy)
-  
-  # makes a graph and prints the correlation thing
-  x <- c()
-  y <- c()
-  
-  for (i in 1:length(listy)) {
-    
-    x <- append(x, listy[[i]][[2]])
-    y <- append(y, listy[[i]][[3]])
-    
-  }
-  
-  plot(x, y)
-  abline(lm(y ~ x))
-  print(cor(x, y))
-  
-}
 
 betterCoordinates <- function(listy) {
   
