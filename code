@@ -480,7 +480,7 @@ aqiCancer <- function(pollution) {
   county <- pollution[[1]]
   pollutionData <- pollution[[2]]
   cancerRate <- rep(c(0), each = length(county))
-  cancer <- read.csv('7776714/youreka/nonhodgkinlymphoma.csv')
+  cancer <- read.csv('7776714/youreka/incd.csv')
   
   for (i in 2:nrow(cancer)) {
     
@@ -518,14 +518,14 @@ aqiCancer <- function(pollution) {
 
 uvThing <- function() {
   
-  lowerLimit <- c(3000, 3100, 3200, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000, 4100, 4200, 4300, 4400, 4500 ,4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 5800)
+  lowerLimit <- c(3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000, 5200, 5400, 5600, 5800)
   list <- list(c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c())
   
   data <- read.csv("7776714/youreka/uv-county.csv")
   for (i in 1:nrow(data)) {
     
     uv <- data[i, 5]
-    index <- which(lowerLimit == (uv %/% 100) * 100)
+    index <- which(lowerLimit == (uv %/% 200) * 200)
     list[[index]] <- append(list[[index]], data[i, 3])
     
   }
@@ -556,7 +556,12 @@ uvAndCancer <- function(data, listy) {
     }
     
     if (length(pollution) > 1) {
+        print("-----------------------------------------------")
+        print(paste("list number ", i))
+        print(county)
+        print(paste("amount of data: ", length(pollution)))
         betterCoordinates(list(county, pollution, cancer))
+        print("-----------------------------------------------")
     }
 
   }
@@ -583,9 +588,9 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
   for (i in startYear:endYear) {
     
     sublist <- list()
-    #if (allPollutionData$has(paste(pollutant, i, sep = ""))) {
-      #sublist <- allPollutionData$get(paste(pollutant, i, sep = ""))
-    #} else {
+    if (allPollutionData$has(paste(pollutant, i, sep = ""))) {
+      sublist <- allPollutionData$get(paste(pollutant, i, sep = ""))
+    } else {
       name <- paste("7776714/youreka/daily_", pollutant, "_", i, ".csv", sep = "")
       csv_data <- read.csv(file = name)
       countyCode <- c()
@@ -613,6 +618,7 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
       days <- 365
       if (i %% 4 == 0) {
         days <- 366
+        print(i)
       }
       delete <- which(die == 0)
       if (length(delete) > 0) {
@@ -621,10 +627,9 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
         numOfDays <- numOfDays[-c(delete)]
       }
       averageConcentration <- averageConcentration * days / numOfDays
-      print(averageConcentration[[1]]/days)
       sublist <- list(countyCode, averageConcentration)
-      # allPollutionData[paste(pollutant, i, sep = "")] <- sublist
-    #}
+      allPollutionData[paste(pollutant, i, sep = "")] <- sublist
+    }
     
     max <- endYear - startYear - 3
     if (max > 5) {
@@ -671,8 +676,12 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
   return(list(finalCounties, finalPollution))
   
 }
-
-# allPollutionData <- dict(hi = 0)
+# install.packages("Rmpfr", repos="http://R-Forge.R-project.org")
+# library("Rmpfr")
+# x <- mpfr(numbers,200)
+install.packages("Dict")
+library(Dict)
+allPollutionData <- dict(hi = 0)
 # format: 
 
 # <- averageAQICalculator(2011, 2016)
@@ -680,7 +689,12 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
 #betterCoordinates(c)
 
 # asking user for what pollutant and what year to gather all the databases and put them into biggerlist
-# pollutant = readline(prompt = "Which pollutant: ")
+
+pollutant <- 1
+
+while (pollutant != 0) {
+
+pollutant = readline(prompt = "Which pollutant: ")
 pollutantNum = 0
 if (pollutant == "ozone") {
   pollutantNum = 44201
@@ -695,14 +709,16 @@ if (pollutant == "ozone") {
 } else if (pollutant == "pm2.5") {
   pollutantNum = 88101
 }
-# one = readline(prompt = "Start year: ")
-# one = as.integer(one)
-# two = readline(prompt = "End year: ")
-# two = as.integer(two)
-# data3 <- list()
+one = readline(prompt = "Start year: ")
+one = as.integer(one)
+two = readline(prompt = "End year: ")
+two = as.integer(two)
+data3 <- list()
 
 p <- intervalCalculation(pollutantNum, one, two)
 s <- aqiCancer(p)
 
 uvData <- uvThing()
 a <- uvAndCancer(s, uvData)
+
+}
