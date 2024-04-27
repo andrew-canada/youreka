@@ -1,2 +1,5 @@
 # Youreka
-High school research project based in Toronto analyzing the effects of air pollution on cancer.
+Research and analysis project to find the correlation between air pollution and melanoma in the United States.
+
+## Background
+
