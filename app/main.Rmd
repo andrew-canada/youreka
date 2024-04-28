@@ -10,6 +10,7 @@ date: "2024-04-28"
 # x <- mpfr(numbers,200)
 install.packages("Dict")
 library(Dict)
+library("Rmpfr")
 source("C:/work/project/git-repo/youreka/app/functions.R")
 allPollutionData <- dict(hi = 0)
 # format:
@@ -22,10 +23,14 @@ allPollutionData <- dict(hi = 0)
 
 pollutant <- 1
 
-while (pollutant != 0) {
+while (TRUE) {
   # readline()
   pollutant <- readline(prompt = "Which pollutant: ")
 
+  if(pollutant == 0){
+    break
+  }
+  
   pollutantNum <- 0
   if (pollutant == "ozone") {
     pollutantNum <- 44201
