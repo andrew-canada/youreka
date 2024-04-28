@@ -480,7 +480,8 @@ aqiCancer <- function(pollution) {
   county <- pollution[[1]]
   pollutionData <- pollution[[2]]
   cancerRate <- rep(c(0), each = length(county))
-  cancer <- read.csv('7776714/youreka/incd.csv')
+  # cancer <- read.csv('7776714/youreka/incd.csv')
+  cancer <- read.csv('C:/work/project/git-repo/youreka/app/csv-dataset/unzipped/incd.csv')
   
   for (i in 2:nrow(cancer)) {
     
@@ -521,7 +522,8 @@ uvThing <- function() {
   lowerLimit <- c(3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000, 5200, 5400, 5600, 5800)
   list <- list(c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c(), c())
   
-  data <- read.csv("7776714/youreka/uv-county.csv")
+  # data <- read.csv("7776714/youreka/uv-county.csv")
+  data <- read.csv("C:/work/project/git-repo/youreka/app/csv-dataset/unzipped/uv-county.csv")
   for (i in 1:nrow(data)) {
     
     uv <- data[i, 5]
@@ -592,7 +594,7 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
       sublist <- allPollutionData$get(paste(pollutant, i, sep = ""))
     } else {
       # name <- paste("7776714/youreka/daily_", pollutant, "_", i, ".csv", sep = "")
-      name <- paste("7776714/youreka/daily_", pollutant, "_", i, ".csv", sep = "")
+      name <- paste("C:/work/project/git-repo/youreka/app/csv-dataset/unzipped/daily_", pollutant, "_", i, ".csv", sep = "")
       csv_data <- read.csv(file = name)
       countyCode <- c()
       averageConcentration <- c()
