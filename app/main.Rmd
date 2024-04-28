@@ -1,0 +1,56 @@
+---
+title: "main"
+output: html_document
+date: "2024-04-28"
+---
+
+```{r}
+# install.packages("Rmpfr", repos="http://R-Forge.R-project.org")
+# library("Rmpfr")
+# x <- mpfr(numbers,200)
+install.packages("Dict")
+library(Dict)
+source("functions.R")
+allPollutionData <- dict(hi = 0)
+# format: 
+
+# <- averageAQICalculator(2011, 2016)
+#c <- aqiCancer(b, 2)
+#betterCoordinates(c)
+
+# asking user for what pollutant and what year to gather all the databases and put them into biggerlist
+
+pollutant <- 1
+
+while (pollutant != 0) {
+
+pollutant = readline(prompt = "Which pollutant: ")
+pollutantNum = 0
+if (pollutant == "ozone") {
+  pollutantNum = 44201
+} else if (pollutant == "nitrogen dioxide") {
+  pollutantNum = 42602
+} else if (pollutant == "sulfur dioxide") {
+  pollutantNum = 42401
+} else if (pollutant == "carbon monoxide") {
+  pollutantNum = 42101
+} else if (pollutant == "pm10") {
+  pollutantNum = 81102
+} else if (pollutant == "pm2.5") {
+  pollutantNum = 88101
+}
+one = readline(prompt = "Start year: ")
+one = as.integer(one)
+two = readline(prompt = "End year: ")
+two = as.integer(two)
+data3 <- list()
+
+p <- intervalCalculation(pollutantNum, one, two)
+s <- aqiCancer(p)
+
+uvData <- uvThing()
+a <- uvAndCancer(s, uvData)
+
+}
+
+```
