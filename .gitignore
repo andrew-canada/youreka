@@ -2,6 +2,7 @@
 .Rhistory
 .Rapp.history
 **/unzipped/
+/.vscode
 
 # Session Data files
 .RData

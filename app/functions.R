@@ -81,6 +81,13 @@ uvAndCancer <- function(data, listy) {
   # data is cancer + pollution
   # list is the uv list
   print(length(listy))
+  
+  #specify path to save PDF to
+  destination = "C:/work/project/git-repo/youreka/app/figures/ozone.pdf"
+  
+  #open PDF
+  pdf(file=destination)
+  
   for (i in 1:length(listy)) {
     
     pollution <- c()
@@ -101,26 +108,36 @@ uvAndCancer <- function(data, listy) {
       print("-----------------------------------------------")
       print(paste("list number ", i))
       print(county)
+      print(paste("avg pollution: ", mean(pollution)))
+      print(paste("avg cancer: ", mean(cancer)))
       print(paste("amount of data: ", length(pollution)))
-      betterCoordinates(list(county, pollution, cancer))
+      betterCoordinates(list(county, pollution, cancer, i))
       print("-----------------------------------------------")
     }
     
   }
   
+  #turn off PDF plotting
+  dev.off()
+  
 }
 
 betterCoordinates <- function(listy) {
   
-  # makes a graph and prints the correlation thing
+  # Makes a graph and prints the correlation
   x <- listy[[2]]
   y <- listy[[3]]
   
-  plot(x, y)
+  plot(x, y, 
+       main = paste(csv_data[2, 9], " vs. Melanoma (UV Intensity ", 2800 + 200 * listy[[4]], "-", 2800 + 200 * listy[[4]] + 200, "Wh/m²)", sep = ""),
+       xlab = paste(csv_data[2, 9], " Concentration (", csv_data[2, 13], ")", sep = ""), 
+       ylab = "Melanoma Incidence (Per 100,000 population)")
+  
   abline(lm(y ~ x))
-  print(cor(x, y))
+  print(paste("correlation: ", cor(x, y)))
   
 }
+
 
 intervalCalculation <- function(pollutant, startYear, endYear, interval) {
   
@@ -135,7 +152,7 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
     } else {
       # name <- paste("7776714/youreka/daily_", pollutant, "_", i, ".csv", sep = "")
       name <- paste("csv-dataset/unzipped/daily_", pollutant, "_", i, ".csv", sep = "")
-      csv_data <- read.csv(file = name)
+      csv_data <<- read.csv(file = name)
       countyCode <- c()
       averageConcentration <- c()
       numOfDays <- c()
@@ -216,6 +233,6 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
   print(finalCounties)
   print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
   print(finalPollution)
-  return(list(finalCounties, finalPollution))
+  return(list(finalCounties, finalPollution, csv_data))
   
 }
