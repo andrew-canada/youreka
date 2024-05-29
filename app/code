@@ -87,10 +87,12 @@ multipleRegression <- function(pollutants, startYear, endYear) {
   for (i in 1:length(biglist[[1]][[1]])) {
     print(biglist[[1]][[1]][[i]])
     check = 0
+    if (length(biglist) > 1) {
     for (j in 2:length(biglist)) {
       if (length(which(biglist[[j]][[1]] == biglist[[1]][[1]][[i]])) > 0) {
         check <- check + 1
       }
+    }
     }
     if (length(which(uv[[1]] == biglist[[1]][[1]][[i]])) > 0) {
       check <- check + 1
