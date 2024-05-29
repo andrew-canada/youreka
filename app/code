@@ -1,3 +1,173 @@
+# mildly important:
+pollutant <- 1
+
+while (pollutant != 0) {
+
+mode = readline(prompt = "Linear or multi or compare: ")
+if (mode == "linear") {
+
+pollutant = readline(prompt = "Which pollutant: ")
+pollutantNum = 0
+if (pollutant == "ozone") {
+  pollutantNum = 44201
+} else if (pollutant == "nitrogen dioxide") {
+  pollutantNum = 42602
+} else if (pollutant == "sulfur dioxide") {
+  pollutantNum = 42401
+} else if (pollutant == "carbon monoxide") {
+  pollutantNum = 42101
+} else if (pollutant == "pm10") {
+  pollutantNum = 81102
+} else if (pollutant == "pm2.5") {
+  pollutantNum = 88101
+}
+one = readline(prompt = "Start year: ")
+one = as.integer(one)
+two = readline(prompt = "End year: ")
+two = as.integer(two)
+data3 <- list()
+
+p <- intervalCalculation(pollutantNum, one, two)
+s <- aqiCancer(p)
+
+uvData <- uvThing()
+a <- uvAndCancer(s, uvData)
+
+} else if (mode == "comapre") {
+  
+  
+} else {
+
+  w = as.integer(readline(prompt = "How many pollutants: "))
+  list <- c()
+  for (i in 1:w) {
+    pollutant = readline(prompt = "Which pollutant: ")
+    if (pollutant == "ozone") {
+      list <- append(list, 44201)
+    } else if (pollutant == "nitrogen dioxide") {
+      list <- append(list, 42602)
+    } else if (pollutant == "sulfur dioxide") {
+      list <- append(list, 42401)
+    } else if (pollutant == "carbon monoxide") {
+      list <- append(list, 42101)
+    } else if (pollutant == "pm10") {
+      list <- append(list, 81102)
+    } else if (pollutant == "pm2.5") {
+      list <- append(list, 88101)
+    }
+  }
+
+  one = readline(prompt = "Start year: ")
+  one = as.integer(one)
+  two = readline(prompt = "End year: ")
+  two = as.integer(two)
+
+  multipleRegression(list, one, two)
+
+}
+
+}
+
+
+# stupid function!!
+multipleRegression <- function(pollutants, startYear, endYear) {
+
+
+  # turn dataset into vector
+  data <- read.csv("7776714/youreka/uv-county.csv")
+  uv <- list(data[["COUNTY_FIPS"]], data[[5]])
+  # does intervalCalculation of all pollutants
+  biglist <- list()
+  for (i in 1:length(pollutants)) {
+    biglist <- append(biglist, list(intervalCalculation(pollutants[[i]], startYear, endYear)))
+  }
+  print(biglist)
+
+  finalList <- c()
+  for (i in 1:length(biglist[[1]][[1]])) {
+    print(biglist[[1]][[1]][[i]])
+    check = 0
+    for (j in 2:length(biglist)) {
+      if (length(which(biglist[[j]][[1]] == biglist[[1]][[1]][[i]])) > 0) {
+        check <- check + 1
+      }
+    }
+    if (length(which(uv[[1]] == biglist[[1]][[1]][[i]])) > 0) {
+      check <- check + 1
+    }
+    if (check == length(biglist)) {
+      print("check!!")
+      finalList <- append(finalList, biglist[[1]][[1]][[i]])
+    }
+  }
+
+  print(finalList)
+
+  finalbiglist <- list()
+
+  cancerRate <- rep(c(0), each = length(finalList))
+  cancer <- read.csv('7776714/youreka/incd.csv')
+  
+  for (i in 2:nrow(cancer)) {
+    
+    # looks through the dataset until it gets to the counties without data
+    if (determineNumber(cancer[i, 3])) { 
+    
+      # adds cancer data to listy
+      if (length(which(finalList == as.numeric(cancer[i, 2]))) > 0) { 
+      
+        # removes counties with big/small populations
+        #if (as.numeric(cancer[i, 3]) * 100000 / as.numeric(cancer[i, 9]) <= 50000) {
+      
+          cancerRate[[which(finalList == as.numeric(cancer[i, 2]))[[1]]]] <- as.numeric(cancer[i, 3])
+      
+        #}
+      
+      }
+      
+    } else {
+      break
+    }
+    
+  }
+  
+  # removes stuff from listy that is not good enough
+  delete <- which(cancerRate == 0)
+  finalList <- finalList[-c(delete)]
+  cancerRate <- cancerRate[-c(delete)]
+  finalbiglist <- append(finalbiglist, list(cancerRate))
+
+  finalbiglist <- append(finalbiglist, list("UV", uv[[2]][which(uv[[1]] %in% finalList)]))
+  print(uv)
+
+  for (i in 1:length(pollutants)) {
+    pollutantNum = ""
+  if (pollutants[[i]] == 44201) {
+    pollutantNum = "Ozone"
+  } else if (pollutants[[i]] == 42602) {
+    pollutantNum = "Nitrogen Dioxide"
+  } else if (pollutants[[i]] == 42401) {
+    pollutantNum = "Sulfur Dioxide"
+  } else if (pollutants[[i]] == 42101) {
+    pollutantNum = "Carbon Monoxide"
+  } else if (pollutants[[i]] == 81102) {
+    pollutantNum = "PM 10"
+  } else if (pollutants[[i]] == 88101) {
+    pollutantNum = "PM 2.5"
+  }
+    finalbiglist <- append(finalbiglist, list(pollutantNum, biglist[[i]][[2]][which(biglist[[i]][[1]] %in% finalList)]))
+  }
+
+  print(finalList)
+  print(finalbiglist)
+
+  model <- lm(finalbiglist[[1]] ~ finalbiglist[[3]] + finalbiglist[[5]] + finalbiglist[[7]])
+  print(summary(model))
+
+  return(finalbiglist)
+
+}
+
 # Calculates the average AQI over a range of years
 averageAQICalculator <- function(startYear, endYear) {
   
