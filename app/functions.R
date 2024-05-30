@@ -1,3 +1,100 @@
+# stupid function!!
+multipleRegression <- function(pollutants, startYear, endYear) {
+  
+  # turn dataset into vector
+  # data <- read.csv("7776714/youreka/uv-county.csv")
+  data <- read.csv("csv-dataset/unzipped/uv-county.csv")
+  uv <- list(data[["COUNTY_FIPS"]], data[[5]])
+  # does intervalCalculation of all pollutants
+  biglist <- list()
+  for (i in 1:length(biglist[[1]][[1]])) {
+    print(biglist[[1]][[1]][[i]])
+    check = 0
+    if (length(biglist) > 1) {
+      for (j in 2:length(biglist)) {
+        if (length(which(biglist[[j]][[1]] == biglist[[1]][[1]][[i]])) > 0) {
+          check <- check + 1
+        }
+      }
+    }
+    if (length(which(uv[[1]] == biglist[[1]][[1]][[i]])) > 0) {
+      check <- check + 1
+    }
+    if (check == length(biglist)) {
+      print("check!!")
+      finalList <- append(finalList, biglist[[1]][[1]][[i]])
+    }
+  }
+  
+  print(finalList)
+  
+  finalbiglist <- list()
+  
+  cancerRate <- rep(c(0), each = length(finalList))
+  # cancer <- read.csv('7776714/youreka/incd.csv')
+  cancer <- read.csv("csv-dataset/unzipped/incd.csv")
+  
+  for (i in 2:nrow(cancer)) {
+    
+    # looks through the dataset until it gets to the counties without data
+    if (determineNumber(cancer[i, 3])) { 
+      
+      # adds cancer data to listy
+      if (length(which(finalList == as.numeric(cancer[i, 2]))) > 0) { 
+        
+        # removes counties with big/small populations
+        #if (as.numeric(cancer[i, 3]) * 100000 / as.numeric(cancer[i, 9]) <= 50000) {
+        
+        cancerRate[[which(finalList == as.numeric(cancer[i, 2]))[[1]]]] <- as.numeric(cancer[i, 3])
+        
+        #}
+        
+      }
+      
+    } else {
+      break
+    }
+    
+  }
+  
+  # removes stuff from listy that is not good enough
+  delete <- which(cancerRate == 0)
+  finalList <- finalList[-c(delete)]
+  cancerRate <- cancerRate[-c(delete)]
+  finalbiglist <- append(finalbiglist, list(cancerRate))
+  
+  finalbiglist <- append(finalbiglist, list("UV", uv[[2]][which(uv[[1]] %in% finalList)]))
+  print(uv)
+  
+  for (i in 1:length(pollutants)) {
+    pollutantNum = ""
+    if (pollutants[[i]] == 44201) {
+      pollutantNum = "Ozone"
+    } else if (pollutants[[i]] == 42602) {
+      pollutantNum = "Nitrogen Dioxide"
+    } else if (pollutants[[i]] == 42401) {
+      pollutantNum = "Sulfur Dioxide"
+    } else if (pollutants[[i]] == 42101) {
+      pollutantNum = "Carbon Monoxide"
+    } else if (pollutants[[i]] == 81102) {
+      pollutantNum = "PM 10"
+    } else if (pollutants[[i]] == 88101) {
+      pollutantNum = "PM 2.5"
+    }
+    finalbiglist <- append(finalbiglist, list(pollutantNum, biglist[[i]][[2]][which(biglist[[i]][[1]] %in% finalList)]))
+  }
+  
+  print(finalList)
+  print(finalbiglist)
+  
+  model <- lm(finalbiglist[[1]] ~ finalbiglist[[3]] + finalbiglist[[5]] + finalbiglist[[7]])
+  print(summary(model))
+  
+  return(finalbiglist)
+  
+}
+
+
 determineNumber <- function(x) {
   
   tryCatch(
@@ -83,10 +180,12 @@ uvAndCancer <- function(data, listy) {
   print(length(listy))
   
   #specify path to save PDF to
-  destination = "C:/work/project/git-repo/youreka/app/figures/ozone.pdf"
+  destination = "C:/work/project/git-repo/youreka/app/figures/test.pdf"
   
   #open PDF
   pdf(file=destination)
+  
+  # par( mfrow= c(0.5,0.5) ) 
   
   for (i in 1:length(listy)) {
     
@@ -122,6 +221,7 @@ uvAndCancer <- function(data, listy) {
   
 }
 
+
 betterCoordinates <- function(listy) {
   
   # Makes a graph and prints the correlation
@@ -134,7 +234,44 @@ betterCoordinates <- function(listy) {
        ylab = "Melanoma Incidence (Per 100,000 population)")
   
   abline(lm(y ~ x))
+  mtext(paste("r =", cor(x, y)), side=3)
   print(paste("correlation: ", cor(x, y)))
+  
+}
+
+plotRatesByEthnicity <- function(){
+  
+  # Create the data for the chart.
+  x <- c(2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
+  white <- c(26.5, 26.9, 27.8, 28.9, 30.0, 30.1, 30.5, 29.8, 30.6, 26.1)
+  black <- c(1.1, 1.0, 1.1, 1.1, 1.1, 1.0, 1.0, 0.9, 1.0, 0.8)
+  indigenous <- c(8.3, 8.3, 8.9, 8.2, 9.7, 8.8, 8.7, 8.6, 8.4, 7.3)
+  asian <- c(1.4, 1.3, 1.3, 1.5, 1.4, 1.3, 1.3, 1.3, 1.2, 1.2)
+  hispanic <- c(4.5, 4.4, 4.5, 4.8, 4.6, 4.9, 4.8, 4.5, 4.5, 3.8)
+  
+  #specify path to save PDF to
+  destination = "C:/work/project/git-repo/youreka/app/figures/test.pdf"
+  #open PDF
+  pdf(file=destination)
+  
+  # Plot the bar chart.
+  plot(x, white, type = "o", col = "red",
+       xlab = "Year", ylab = "Melanoma Rate (per 100,000 population)",
+       main = "Melanoma Rates by Ethnicity", xlim=c(2011, 2020), ylim=c(0, 45), 
+       yaxs="i", yaxp=c(0, 45, 9), xaxp=c(2011, 2020, 9))
+  
+  lines(x, black, type = "o", col = "purple")
+  lines(x, indigenous, type = "o", col = "orange")
+  lines(x, asian, type = "o", col = "green")
+  lines(x, hispanic, type = "o", col = "blue")
+  
+  legend(x = "topleft", box.col = "brown", 
+         box.lwd = 2 , title="LEGEND",  
+         legend=c("White", "Black", "Indigenous", "Asian and Pacific Islander", "Hispanic"),  
+         fill = c("red","purple", "orange", "green", "blue")) 
+  
+  #turn off PDF plotting
+  dev.off()
   
 }
 
@@ -175,18 +312,13 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
         }
       }
       
-      days <- 365
-      if (i %% 4 == 0) {
-        days <- 366
-        print(i)
-      }
       delete <- which(die == 0)
       if (length(delete) > 0) {
         countyCode <- countyCode[-c(delete)]
         averageConcentration <- averageConcentration[-c(delete)]
         numOfDays <- numOfDays[-c(delete)]
       }
-      averageConcentration <- averageConcentration * days / numOfDays
+      averageConcentration <- averageConcentration / numOfDays
       sublist <- list(countyCode, averageConcentration)
       allPollutionData[paste(pollutant, i, sep = "")] <- sublist
     }
@@ -230,9 +362,9 @@ intervalCalculation <- function(pollutant, startYear, endYear, interval) {
   }
   
   finalPollution <- finalPollution / (endYear-startYear-3) / 5
-  print(finalCounties)
+  # print(finalCounties)
   print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-  print(finalPollution)
-  return(list(finalCounties, finalPollution, csv_data))
+  # print(finalPollution)
+  return(list(finalCounties, finalPollution))
   
 }
